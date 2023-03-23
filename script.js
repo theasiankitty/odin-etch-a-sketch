@@ -45,42 +45,16 @@ mainContainer.appendChild(footerContainer);
 
 // mouse down
 let mouseDown = false;
+let touchStart = false;
 document.body.onmousedown = () => (mouseDown = true);
 document.body.onmouseup = () => (mouseDown = false);
+document.body.ontouchstart = () => (touchStart = true);
+document.body.ontouchend = () => (touchStart = false);
 
 // default colorPicker value
 let penColor = '#000000';
 
-function createGrid(size) {
-    const gridContainer = document.createElement('div');
-    gridContainer.classList.add('grid-container');
-
-    for (i = 1; i <= size; i++) {
-        const grid = document.createElement('div');
-        grid.classList.add('grid');
-        grid.style.cssText =
-            `display: grid;
-            grid-template-columns: repeat(${size}, 1fr);
-            grid-auto-rows: minmax(1fr, auto);`
-        gridContainer.appendChild(grid);
-
-        for (j = 1; j <= size; j++) {
-            const gridItem = document.createElement('div');
-            gridItem.classList.add(`grid-item`);
-            gridItem.addEventListener('mouseover', draw);
-            gridItem.addEventListener('mousedown', draw);
-            grid.appendChild(gridItem);
-        }
-    }
-    sketchPadContainer.appendChild(gridContainer);
-}
-
-// draw function
-function draw(e) {
-    if (e.type === 'mouseover' && !mouseDown) return;
-    e.target.style.backgroundColor = penColor;
-}
-
+// create tools
 function createTools() {
     // color picker
     const colorPickerContainer = document.createElement('div');
@@ -148,10 +122,23 @@ function createTools() {
 
     // clear the sketchpad
     clearBtn.onclick = () => {
-        console.log('click');
+        const currentGrid = document.querySelector('.grid-container');
+        const currentGridItems = document.querySelectorAll('.grid-item');
+        currentGridItems.forEach(item => {
+            item.classList.add('fade-out-animation');
+        });
+
+        currentGrid.addEventListener('animationstart', currentGrid.classList.add('erase-animation'));
+        currentGrid.addEventListener('animationend', () => {
+            currentGridItems.forEach(item => {
+                item.classList.remove('fade-out-animation');
+            });
+            removeGrid(currentGrid);
+            createGrid(slider.value);
+        });
     }
 
-    // change the pixel size of the sketch pad
+    // change the pixel size of the sketchpad
     slider.oninput = () => {
         const min = slider.min;
         const max = slider.max;
@@ -159,13 +146,60 @@ function createTools() {
 
         slider.style.backgroundSize = (val - min) * 100 / (max - min) + '% 100%';
         const currentGrid = document.querySelector('.grid-container');
-        sketchPadContainer.removeChild(currentGrid);
+        removeGrid(currentGrid);
 
         sliderLabel.textContent = `${slider.value} x ${slider.value}`;
         createGrid(slider.value);
     }
-
     createGrid(slider.value);
 }
+
+function createGrid(size) {
+    const gridContainer = document.createElement('div');
+    gridContainer.classList.add('grid-container');
+
+    for (i = 1; i <= size; i++) {
+        const grid = document.createElement('div');
+        grid.classList.add('grid');
+        grid.style.cssText =
+            `display: grid;
+            grid-template-columns: repeat(${size}, 1fr);
+            grid-auto-rows: minmax(1fr, auto);`
+        gridContainer.appendChild(grid);
+
+        for (j = 1; j <= size; j++) {
+            const gridItem = document.createElement('div');
+            gridItem.classList.add(`grid-item`);
+            gridItem.addEventListener('mouseover', draw);
+            gridItem.addEventListener('mousedown', draw);
+            // working on the mobile side
+            // gridItem.addEventListener('touchmove', drawMobile);
+            // gridItem.addEventListener('touchstart', drawMobile);
+            grid.appendChild(gridItem);
+        }
+    }
+    sketchPadContainer.appendChild(gridContainer);
+}
+
+// remove grid or clear grid (sketchpad)
+function removeGrid(grid) {
+    sketchPadContainer.innerHTML = '';
+}
+
+// draw function
+function draw(e) {
+    console.log(e.type);
+    if (e.type === 'mouseover' && !mouseDown) return;
+    e.target.style.backgroundColor = penColor;
+    e.preventDefault();
+}
+
+// trying to work on the mobile side
+// function drawMobile(e) {
+//     if (e.type === 'touchmove') {
+//         e.target.style.backgroundColor = penColor;
+//         e.preventDefault();
+//     }
+// }
 
 createTools();
