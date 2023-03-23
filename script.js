@@ -117,7 +117,6 @@ function createTools() {
     colorPicker.oninput = () => {
         colorPickerLabel.textContent = colorPicker.value;
         penColor = colorPicker.value;
-        console.log(penColor);
     }
 
     // clear the sketchpad
@@ -188,7 +187,6 @@ function removeGrid(grid) {
 
 // draw function
 function draw(e) {
-    console.log(e.type);
     if (e.type === 'mouseover' && !mouseDown) return;
     e.target.style.backgroundColor = penColor;
     e.preventDefault();
